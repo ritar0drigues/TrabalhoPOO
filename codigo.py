@@ -83,10 +83,8 @@ class Cliente:
             
         self.historico_compras.append((joia, quantidade, pagamento_recibo))
         
-        if self.pontos == 0:
-            self.pontos += int(joia.preco // 10)
-        else:
-            self.pontos += int(joia.preco // 10)
+        self.pontos += int((joia.preco * quantidade) // 10)
+
         
     def listar_historico_compras(self):
         print(f"\nHistórico de Compras para {self.nome}:")
@@ -138,12 +136,12 @@ class GestaoClientes:
         if self.clientes:
             print("----Clientes Cadastrados:----")
             for cliente in self.clientes:
-                print(f"Cliente {cliente}:\n Nome: {cliente.nome},\n CPF: {cliente.cpf},\n Endereço: {cliente.endereco},\n Contato: {cliente.contato},\n Pontos: {cliente.pontos}")  
+                print(f"Nome: {cliente.nome},\n CPF: {cliente.cpf},\n Endereço: {cliente.endereco},\n Contato: {cliente.contato},\n Pontos: {cliente.pontos}")  
         else:
             print("Nenhum Cliente cadastrado. ")
 
               
-    def adicionar_compra_cliente(self, cpf, joia, quantidade):
+    def adicionar_compra_cliente(self, cpf, joia, quantidade, estoque, gestao_vendas):
         cliente = self.buscar_cliente(cpf)
         if cliente is None:
             return
@@ -160,15 +158,18 @@ class GestaoClientes:
             validade = input("Validade do cartão (MM/AA): ")
             cvv = input("CVV do cartão: ")
 
-        sistema_pagamento = SistemaPagamento()
+        sistema_pagamento = SistemaPagamento(estoque)  # Passe o estoque aqui
         recibo = sistema_pagamento.realizar_pagamento(cliente, tipo_pagamento, valor_total, numero_cartao, validade, cvv)
         if recibo:
             cliente.adicionar_compra(joia, quantidade, recibo)
             joia.qtd -= quantidade
             self.dicionario_vendas[cpf].append((joia, quantidade))
+            gestao_vendas.adicionar_venda(joia, quantidade, joia.preco)
             print(f"Compra da joia {joia.nome} adicionada ao histórico do cliente {cliente.nome}.")
         else:
             print("Compra não registrada devido a falha no pagamento.")
+
+                
             
     def historico_compras_cliente(self, cpf):
         for cliente in self.clientes:
@@ -352,15 +353,17 @@ class SistemaPagamento:
 class GestaoVendas:
     def __init__(self):
         self.vendas = []
-
-    def registrar_venda(self, joia, quantidade, preco, data_venda):
+        
+    def adicionar_venda(self, joia, quantidade, preco):
         venda = {
             "joia": joia,
             "quantidade": quantidade,
             "preco": preco,
-            "data_venda": data_venda
+            "data_venda": datetime.now()
         }
         self.vendas.append(venda)
+        print(f"Venda registrada: {venda['joia'].nome}, Quantidade: {venda['quantidade']}, Preço: R${venda['preco']:.2f}, Data: {venda['data_venda']}")
+
 
     def gerar_relatorio_vendas(self, inicio, fim):
         relatorio = [venda for venda in self.vendas if inicio <= venda["data_venda"] <= fim]
@@ -368,8 +371,7 @@ class GestaoVendas:
             print("Nenhuma venda registrada no período especificado.")
         else:
             for venda in relatorio:
-                print(f"Joia: {venda['joia'].nome}, Quantidade: {venda['quantidade']}, Preço: R${venda['preco']:.2f}, Data: {venda['data_venda']}")
-
+                print(f"Venda: {venda['joia'].nome}, Quantidade: {venda['quantidade']}, Data: {venda['data_venda']}")
     def joias_mais_vendidas(self):
         contagem_joias = Counter()
         for venda in self.vendas:
@@ -393,6 +395,7 @@ def pausa_para_continuar():
 def menu():
     estoque = Estoque()
     gestao_clientes = GestaoClientes()
+    gestao_vendas = GestaoVendas()
     
     while True:
         print("\n----- Sistema Encanto e Glamour -----")
@@ -406,7 +409,8 @@ def menu():
         print("7. Adicionar Compra ao Cliente")
         print("8. Consultar Histórico de Compras do Cliente")
         print("9. Listar Clientes")
-        print("10. Sair")
+        print("10. Gestão de Vendas")
+        print("11. Sair")
         opcao = input("Escolha uma opção: ")
 
         if opcao == '1':
@@ -485,20 +489,67 @@ def menu():
             if cliente:
                 idjoia = input("ID da joia: ")
                 quantidade = int(input("Quantidade: "))
-                joia = next((j for j in estoque.joias if j.idjoia == idjoia), None)
+                joia = next((j for j in estoque.produto if j.idjoia == idjoia), None)
                 if joia:
-                    gestao_clientes.adicionar_compra_cliente(cpf, joia, quantidade)
+                    gestao_clientes.adicionar_compra_cliente(cpf, joia, quantidade, estoque, gestao_vendas)
+                    gestao_vendas.vendas.append({"joia": joia, "quantidade": quantidade, "data_venda": datetime.now()})
                 else:
                     print("Joia não encontrada no estoque.")
-        
+            pausa_para_continuar()
+
         elif opcao == '8':
             cpf = input("CPF do cliente: ")
             gestao_clientes.historico_compras_cliente(cpf)
+            pausa_para_continuar()
 
         elif opcao == '9':
             gestao_clientes.listar_clientes()
+            pausa_para_continuar()
 
-        elif opcao == '10':
+        elif opcao == '10':  # Novo menu de Gestão de Vendas
+            while True:
+                print("\n--- Gestão de Vendas ---")
+                print("1. Ver Relatório de Vendas")
+                print("2. Calcular Lucro em Intervalo de Tempo")
+                print("3. Ver Lucro Total")
+                print("4. Voltar ao Menu Principal")
+                opcao_vendas = input("Escolha uma opção: ")
+
+                if opcao_vendas == '1':
+                    try:
+                        inicio = datetime.strptime(input("Data de início (AAAA-MM-DD): "), "%Y-%m-%d")
+                        fim = datetime.strptime(input("Data de fim (AAAA-MM-DD): "), "%Y-%m-%d") + timedelta(days=1)
+                        gestao_vendas.gerar_relatorio_vendas(inicio, fim)
+                    except ValueError:
+                        print("Formato de data inválido.")
+                    pausa_para_continuar()
+
+                elif opcao_vendas == '2':
+                    try:
+                        inicio = datetime.strptime(input("Data de início (AAAA-MM-DD): "), "%Y-%m-%d")
+                        fim = datetime.strptime(input("Data de fim (AAAA-MM-DD): "), "%Y-%m-%d") + timedelta(days=1)
+                        gestao_vendas.calcular_lucro_total(inicio, fim)
+                    except ValueError:
+                        print("Formato de data inválido.")
+                    pausa_para_continuar()
+
+                elif opcao_vendas == '3':
+                    try:
+                        inicio = datetime.strptime(input("Data de início (AAAA-MM-DD): "), "%Y-%m-%d")
+                        fim = datetime.strptime(input("Data de fim (AAAA-MM-DD): "), "%Y-%m-%d") + timedelta(days=1)
+                        gestao_vendas.calcular_lucro_total(inicio, fim)
+                    except ValueError:
+                        print("Formato de data inválido.")
+                    pausa_para_continuar()
+
+                elif opcao_vendas == '4':
+                    break
+
+                else:
+                    print("Opção inválida. Tente novamente.")
+                    pausa_para_continuar()
+
+        elif opcao == '11':
             break
 
         else:

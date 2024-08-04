@@ -1,1 +1,1 @@
-gestao.historico_compras_cliente(74464345387)
+adicionar_compra
