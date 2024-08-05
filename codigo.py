@@ -105,7 +105,7 @@ class Brinco(Joia):
             return True, f'A peça {self._nome} é de material {self._material} legítimo.'
         return False, f'A peça {self._nome} não é de material {self._material} legítimo.'
 
-class Pulseira(Joia, Autenticar):
+class Pulseira(Joia):
     def __init__(self, idjoia, nome, material, preco, qtd, codigo_validacao):
         super().__init__(idjoia, nome, material, preco, qtd, codigo_validacao)
 
@@ -381,7 +381,7 @@ class Estoque:
             print("Joias Indisponíveis.")
 
 
-class Pagamento(ABC):
+class Pagamento(abc.ABC):
     @abstractmethod
     def pagar(self, valor):
         pass
