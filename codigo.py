@@ -1,120 +1,209 @@
 import random
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from collections import Counter
 
+from abc import ABC, abstractmethod
+
 class Joia:
     def __init__(self, idjoia, nome, material, preco, qtd, codigo_validacao):
-        self.idjoia = idjoia
-        self.nome = nome
-        self.material = material
-        self.preco = preco
-        self.qtd = qtd
-        self.codigo_validacao = codigo_validacao
+        self._idjoia = idjoia
+        self._nome = nome
+        self._material = material
+        self._preco = preco
+        self._qtd = qtd
+        self._codigo_validacao = codigo_validacao
+
+    @property
+    def idjoia(self):
+        return self._idjoia
+
+    @idjoia.setter
+    def idjoia(self, value):
+        self._idjoia = value
+
+    @property
+    def nome(self):
+        return self._nome
+
+    @nome.setter
+    def nome(self, value):
+        self._nome = value
+
+    @property
+    def material(self):
+        return self._material
+
+    @material.setter
+    def material(self, value):
+        self._material = value
+
+    @property
+    def preco(self):
+        return self._preco
+
+    @preco.setter
+    def preco(self, value):
+        self._preco = value
+
+    @property
+    def qtd(self):
+        return self._qtd
+
+    @qtd.setter
+    def qtd(self, value):
+        self._qtd = value
+
+    @property
+    def codigo_validacao(self):
+        return self._codigo_validacao
+
+    @codigo_validacao.setter
+    def codigo_validacao(self, value):
+        self._codigo_validacao = value
 
 class Autenticar(ABC):
     @abstractmethod
     def autenticar(self):
         pass
-    
-    @classmethod
-    def criar_joia(cls, tipo, idjoia, nome, material, preco, qtd, codigo_validacao, extra_info):
-        if tipo == 'colar':
-            if not isinstance(extra_info, str):  # Tamanho deve ser uma string
-                raise ValueError("Para um Colar, 'extra_info' deve ser uma string representando o tamanho")
-            return Colar(idjoia, nome, material, preco, qtd, extra_info, codigo_validacao)
-        elif tipo == 'brinco':
-            if not isinstance(extra_info, str):  # Estilo deve ser uma string
-                raise ValueError("Para um Brinco, 'extra_info' deve ser uma string representando o estilo")
-            return Brinco(idjoia, nome, material, preco, qtd, extra_info, codigo_validacao)
-        elif tipo == 'pulseira':
-            if extra_info is not None:  # Pulseira não deve ter informações extras
-                raise ValueError("Pulseira não deve ter informações extras")
-            return Pulseira(idjoia, nome, material, preco, qtd, codigo_validacao)
-        else:
-            raise ValueError("Tipo de joia inválido")
-        
-class Colar(Joia):
+
+class Colar(Joia, Autenticar):
     def __init__(self, idjoia, nome, material, preco, qtd, tamanho, codigo_validacao):
         super().__init__(idjoia, nome, material, preco, qtd, codigo_validacao)
-        self.tamanho = tamanho
+        self._tamanho = tamanho
+
+    
+    @property
+    def tamanho(self):
+        return self._tamanho
+
+    @tamanho.setter
+    def tamanho(self, value):
+        self._tamanho = value
     
     def autenticar(self):
-        if isinstance(self, Colar):
-            if self.codigo_validacao == "@riginal":
-                return True, f'A peça {self.nome} é de material {self.material} legítimo.'
-        return False, f'A peça {self.nome} não é de material {self.material} legítimo.'
-    
-class Brinco(Joia):
+        if self._codigo_validacao == "@riginal":
+            return True, f'A peça {self._nome} é de material {self._material} legítimo.'
+        return False, f'A peça {self._nome} não é de material {self._material} legítimo.'
+
+class Brinco(Joia, Autenticar):
     def __init__(self, idjoia, nome, material, preco, qtd, estilo, codigo_validacao):
         super().__init__(idjoia, nome, material, preco, qtd, codigo_validacao)
-        self.estilo = estilo
+        self._estilo = estilo
+
+    
+    @property
+    def estilo(self):
+        return self._estilo
+
+    @estilo.setter
+    def estilo(self, value):
+        self._estilo = value
         
     def autenticar(self):
-        if isinstance(self, Brinco):
-            if self.codigo_validacao == "@riginal":
-                return True, f'A peça {self.nome} é de material {self.material} legítimo.'
-        return False, f'A peça {self.nome} não é de material {self.material} legítmo.'
-    
-    
-class Pulseira(Joia):
+        if self._codigo_validacao == "@riginal":
+            return True, f'A peça {self._nome} é de material {self._material} legítimo.'
+        return False, f'A peça {self._nome} não é de material {self._material} legítimo.'
+
+class Pulseira(Joia, Autenticar):
     def __init__(self, idjoia, nome, material, preco, qtd, codigo_validacao):
         super().__init__(idjoia, nome, material, preco, qtd, codigo_validacao)
-        
+
     def autenticar(self):
-        if isinstance(self, Pulseira):
-            if self.codigo_validacao == "@riginal":
-                return True, f'A peça {self.nome} é de material {self.material} legítimo.'
-        return False, f'A peça {self.nome} não é de material {self.material} legítimo.'
+        if self._codigo_validacao == "@riginal":
+            return True, f'A peça {self._nome} é de material {self._material} legítimo.'
+        return False, f'A peça {self._nome} não é de material {self._material} legítimo.'
 
 class Cliente:
     def __init__(self, nome, cpf, endereco, contato, pontos=0):
-        self.nome = nome
-        self.cpf = cpf
-        self.endereco = endereco
-        self.contato = contato
-        self.pontos = pontos
-        self.historico_compras = []
-        
-    def adicionar_compra(self, joia, quantidade, pagamento_recibo):
-        
-        if not self.historico_compras:
-            self.pontos = 0
-            
-        self.historico_compras.append((joia, quantidade, pagamento_recibo))
-        
-        self.pontos += int((joia.preco * quantidade) // 10)
+        self._nome = nome
+        self._cpf = cpf
+        self._endereco = endereco
+        self._contato = contato
+        self._pontos = pontos
+        self._historico_compras = []
 
-        
-    def listar_historico_compras(self):
-        print(f"\nHistórico de Compras para {self.nome}:")
-        for compra in self.historico_compras:
-            joia, quantidade, recibo = compra
-            print(f"Joia: {joia.nome}, Material: {joia.material}, Preço: R${joia.preco}, Quantidade: {quantidade}")
-            print(f"Recibo: {recibo}")
+    @property
+    def nome(self):
+        return self._nome
+
+    @nome.setter
+    def nome(self, value):
+        self._nome = value
+
+    @property
+    def cpf(self):
+        return self._cpf
+
+    @cpf.setter
+    def cpf(self, value):
+        self._cpf = value
+
+    @property
+    def endereco(self):
+        return self._endereco
+
+    @endereco.setter
+    def endereco(self, value):
+        self._endereco = value
+
+    @property
+    def contato(self):
+        return self._contato
+
+    @contato.setter
+    def contato(self, value):
+        self._contato = value
+
+    @property
+    def pontos(self):
+        return self._pontos
+
+    @pontos.setter
+    def pontos(self, value):
+        self._pontos = value
+
+    @property
+    def historico_compras(self):
+        return self._historico_compras
+
+    def adicionar_compra(self, joia, quantidade, pagamento_recibo):
+        if not self._historico_compras:
+            self._pontos = 0
             
+        self._historico_compras.append((joia, quantidade, pagamento_recibo))
+        self._pontos += int((joia.preco * quantidade) // 10)
+
+    def listar_historico_compras(self):
+        print(f"\nHistórico de Compras para {self._nome}:")
+        if not self._historico_compras:
+            print("O cliente não possui histórico de compra por não ter feito nenhuma compra.")
+        else:
+            for compra in self._historico_compras:
+                joia, quantidade, recibo = compra
+                print(f"Joia: {joia.nome}, Material: {joia.material}, Preço: R${joia.preco:.2f}, Quantidade: {quantidade}")
+                print(f"Recibo: {recibo}")
+
 class GestaoClientes:
     
     def __init__(self):
-        self.clientes = [] #armazenar clientes cadastrados
-        self.dicionario_vendas = {} # rastrear as vendas por clientes
+        self._clientes = []  
+        self._dicionario_vendas = {}  
         
     def cadastrar_cliente(self, nome, cpf, endereco, contato):
-        # Verifica se o CPF já está cadastrado
-        for cliente in self.clientes:
+        for cliente in self._clientes:
             if cliente.cpf == cpf:
                 print(f"Cliente com CPF {cpf} já está cadastrado.")
                 return
         
-        # Se o CPF não estiver cadastrado, adiciona o novo cliente
         novo_cliente = Cliente(nome, cpf, endereco, contato)
-        self.clientes.append(novo_cliente)
-        self.dicionario_vendas[cpf] = [] # Inicializa a lista de compras para o novo cliente
+        self._clientes.append(novo_cliente)
+        self._dicionario_vendas[cpf] = [] 
         print(f"Cliente {nome} cadastrado com sucesso.")
 
-        
     def editar_cliente(self, cpf, nome=None, endereco=None, contato=None, pontos=None):
-        for cliente in self.clientes:
+        for cliente in self._clientes:
             if cliente.cpf == cpf:
                 cliente.nome = nome if nome is not None else cliente.nome
                 cliente.endereco = endereco if endereco is not None else cliente.endereco
@@ -124,26 +213,29 @@ class GestaoClientes:
                 return
         print(f"Cliente com CPF {cpf} não encontrado.")
         
+        
     def buscar_cliente(self, cpf):
-        for cliente in self.clientes:
+        for cliente in self._clientes:
             if cliente.cpf == cpf:
                 print(f"Cliente {cliente.nome} encontrado e cadastrado no sistema")
                 return cliente
-        print(f"Cliente não encontrado no sistema.")
-        return None
+            else:
+                print(f"Cliente não encontrado no sistema.")
+                return None
+       
         
     def listar_clientes(self):
-        if self.clientes:
+        if self._clientes:
             print("----Clientes Cadastrados:----")
-            for cliente in self.clientes:
-                print(f"Nome: {cliente.nome},\n CPF: {cliente.cpf},\n Endereço: {cliente.endereco},\n Contato: {cliente.contato},\n Pontos: {cliente.pontos}")  
+            for cliente in self._clientes:
+                print(f" Nome: {cliente.nome},\n CPF: {cliente.cpf},\n Endereço: {cliente.endereco},\n Contato: {cliente.contato},\n Pontos: {cliente.pontos}")  
         else:
-            print("Nenhum Cliente cadastrado. ")
+            print("Nenhum Cliente cadastrado.")
 
-              
-    def adicionar_compra_cliente(self, cpf, joia, quantidade, estoque, gestao_vendas):
+    def adicionar_compra_cliente(self, cpf, joia, quantidade, estoque):
         cliente = self.buscar_cliente(cpf)
         if cliente is None:
+            print(f"Cliente com CPF {cpf} não encontrado.")
             return
 
         if quantidade > joia.qtd:
@@ -158,107 +250,138 @@ class GestaoClientes:
             validade = input("Validade do cartão (MM/AA): ")
             cvv = input("CVV do cartão: ")
 
-        sistema_pagamento = SistemaPagamento(estoque)  # Passe o estoque aqui
-        recibo = sistema_pagamento.realizar_pagamento(cliente, tipo_pagamento, valor_total, numero_cartao, validade, cvv)
-        if recibo:
-            cliente.adicionar_compra(joia, quantidade, recibo)
-            joia.qtd -= quantidade
-            self.dicionario_vendas[cpf].append((joia, quantidade))
-            gestao_vendas.adicionar_venda(joia, quantidade, joia.preco)
-            print(f"Compra da joia {joia.nome} adicionada ao histórico do cliente {cliente.nome}.")
-        else:
-            print("Compra não registrada devido a falha no pagamento.")
+        sistema_pagamento = SistemaPagamento(estoque)  
+        pagamento_aceito = False
+        while not pagamento_aceito:
+            valor_pagamento = float(input(f"Valor a ser pago (Total: R${valor_total:.2f}): "))
+            if valor_pagamento < valor_total:
+                print("Valor insuficiente. Tente novamente.")
+            else:
+                troco = valor_pagamento - valor_total
+                if troco > 0:
+                    print(f"Pagamento aceito. Seu troco é R${troco:.2f}.")
+                recibo = sistema_pagamento.realizar_pagamento(cliente, tipo_pagamento, valor_total, numero_cartao, validade, cvv)
+                if recibo:
+                    cliente.adicionar_compra(joia, quantidade, recibo)
+                    joia.qtd -= quantidade
+                    if cpf not in self._dicionario_vendas:
+                        self._dicionario_vendas[cpf] = []
+                    self._dicionario_vendas[cpf].append((joia, quantidade))
+                    print(f"Compra da joia {joia.nome} adicionada ao histórico do cliente {cliente.nome}.")
+                    pagamento_aceito = True
+                else:
+                    print("Compra não registrada devido a falha no pagamento.")
 
-                
-            
     def historico_compras_cliente(self, cpf):
-        for cliente in self.clientes:
-            if cliente.cpf == cpf:
-                cliente.listar_historico_compras()
-                return
-        print(f"Cliente com CPF {cpf} não encontrado.")
+        cliente = self.buscar_cliente(cpf)
+        if cliente:
+            cliente.listar_historico_compras()
+        else:
+            print(f"Cliente com CPF {cpf} não encontrado.")
     
     def consultar_cliente(self, cpf):
-        for cliente in self.clientes:
-            if cliente.cpf == cpf:
-                print(f"Histórico de Compras do Cliente {cliente.nome}:")
-                if not cliente.historico_compras:
-                    print("Nenhuma compra registrada.")
-                else:
-                    for joia, quantidade in cliente.historico_compras:
-                        print(f"Joia: {joia.nome}, Preço: R${joia.preco:.2f}, Quantidade: {joia.quantidade}, Pontos: {joia.pontos}")
-                return
-        print(f"Cliente com CPF {cpf} não encontrado.")
+        cliente = self.buscar_cliente(cpf)
+        if cliente:
+            print(f"Histórico de Compras do Cliente {cliente.nome}:")
+            if not cliente.historico_compras:
+                print("Nenhuma compra registrada.")
+            else:
+                for joia, quantidade in cliente.historico_compras:
+                    print(f"Joia: {joia.nome}, Preço: R${joia.preco:.2f}, Quantidade: {quantidade}, Pontos: {cliente.pontos}")
+        else:
+            print(f"Cliente com CPF {cpf} não encontrado.")
+
     
 class Estoque:
     
     def __init__(self):
-        self.produto = []
-        self.clientes = []
+        self._produto = []
+        self._clientes = []
         
-    def adicionar_joia(self,joia):
+
+    @property
+    def produto(self):
+        return self._produto
+
+    @produto.setter
+    def produto(self, value):
+        self._produto = value
+
+    @property
+    def clientes(self):
+        return self._clientes
+
+    @clientes.setter
+    def clientes(self, value):
+        self._clientes = value
+
+    def adicionar_joia(self, joia):
         if joia.codigo_validacao == "@riginal":
-            self.produto.append(joia)
+            self._produto.append(joia)
             print(f"Joia {joia.nome} adicionada ao estoque.")
         else:
             print(f"Joia {joia.nome} não pode ser adicionada ao estoque")
         
-    def buscar_joia(self, nome, idjoia):
-        for joia in self.produto:
+    def buscar_joia(self, indice, nome, idjoia):
+        if 0 <= indice < len(self._produto):
+            joia = self._produto[indice]
             if joia.nome == nome and joia.idjoia == idjoia:
                 print(f"Joia {joia.nome} disponível no estoque.")
                 return joia
-        
-        # Mensagem e retorno após o loop, se nenhum item for encontrado
-        print(f"Joia {joia.nome} indisponível no estoque.")
-        return None
+            else:
+                print(f"Joia com nome {nome} e ID {idjoia} não corresponde ao índice {indice}.")
+                return None
+        else:
+            print(f"Índice {indice} fora dos limites do estoque.")
+            return None
 
-        
-    def editar_joia(self, indice, nome, idjoia, material, preco, quantidade, tamanho=None, estilo=None, codigo_validacao=None):
-        if 0 <= indice < len(self.produto):
-            joia = self.produto[indice]
-            joia.nome = nome
-            joia.idjoia = idjoia
-            joia.material = material
-            joia.preco = preco
-            joia.quantidade = quantidade
-            joia.codigo_validacao = codigo_validacao
+    def editar_joia(self, indice, nome=None, idjoia=None, material=None, preco=None, quantidade=None, tamanho=None, estilo=None, codigo_validacao=None):
+        if 0 <= indice < len(self._produto):
+            joia = self._produto[indice]
 
+            joia.nome = nome if nome is not None else joia.nome
+            joia.idjoia = idjoia if idjoia is not None else joia.idjoia
+            joia.material = material if material is not None else joia.material
+            joia.preco = preco if preco is not None else joia.preco
+            joia.qtd = quantidade if quantidade is not None else joia.qtd
 
             if isinstance(joia, Colar):
-                if tamanho is not None:
-                    joia.tamanho = tamanho
-                    
-            elif isinstance(joia, Brinco):
-                if estilo is not None:
-                    joia.estilo = estilo
+                joia.tamanho = tamanho if tamanho is not None else joia.tamanho
+                joia.codigo_validacao = codigo_validacao if codigo_validacao is not None else joia.codigo_validacao
+                
+            if isinstance(joia, Brinco):
+                joia.tamanho = tamanho if tamanho is not None else joia.tamanho
+                joia.estilo = estilo if estilo is not None else joia.estilo
 
-            print(f"Joia {joia.nome} atualizada no estoque.")
+            print(f"Joia {joia.nome} atualizada com sucesso!")
         else:
             print("Índice inválido.")
-            
-            
-    def remover_joia(self, indice, ):
-        if 0 <= indice < len(self.produto):
-            joia = self.produto.pop(indice)
-            print(f"Joia {joia.nome} removida do estoque: ")
-        else:
-            print("Índice inválido.")
+
+    def remover_joia(self, idjoia, quantidade):
+        for joia in self._produto:
+            if joia.idjoia == idjoia:
+                if joia.qtd >= quantidade:
+                    joia.qtd -= quantidade
+                    if joia.qtd == 0:
+                        self._produto.remove(joia)
+                        print(f"Joia {joia.nome} removida do estoque.")
+                    else:
+                        print(f"{quantidade} unidades da joia {joia.nome} removidas do estoque. Restam {joia.qtd} unidades.")
+                else:
+                    print(f"Quantidade insuficiente em estoque. Restam apenas {joia.qtd} unidades.")
+                return
+        print("ID da joia não encontrado no estoque.")
         
     def listar_joias(self):
-        if self.produto:
+        if self._produto:
             print("--- Joias Disponíveis no estoque: ---")
-            for i, joia in enumerate(self.produto):
-            # Exibe o nome da joia, o ID atualizado e o material/preço
-                print(f"{i}: {joia.nome}, ID: {joia.idjoia}, ({joia.material}, R${joia.preco:.2f}), Quantidade: {joia.qtd}")
+            for i, joia in enumerate(self._produto):
+                preco = joia.preco if joia.preco is not None else 0.00
+                print(f"{i}: {joia.nome}, ID: {joia.idjoia}, ({joia.material}, R${preco:.2f}), Quantidade: {joia.qtd}")
         else:
             print("Joias Indisponíveis.")
-    
-    def verificar_estoque(self):
-        total_joias = sum(joia.qtd for joia in self.produto)
-        print(f"Total de joias no estoque: {total_joias}")
 
-    
+
 class Pagamento(ABC):
     @abstractmethod
     def pagar(self, valor):
@@ -270,38 +393,83 @@ class Pagamento(ABC):
 
 class CartaoCredito(Pagamento):
     def __init__(self, numero_cartao, validade, cvv):
-        self.numero_cartao = numero_cartao
-        self.validade = validade
-        self.cvv = cvv
+        self._numero_cartao = numero_cartao
+        self._validade = validade
+        self._cvv = cvv
+
+    @property
+    def numero_cartao(self):
+        return self._numero_cartao
+
+    @numero_cartao.setter
+    def numero_cartao(self, value):
+        self._numero_cartao = value
+
+    @property
+    def validade(self):
+        return self._validade
+
+    @validade.setter
+    def validade(self, value):
+        self._validade = value
+
+    @property
+    def cvv(self):
+        return self._cvv
+
+    @cvv.setter
+    def cvv(self, value):
+        self._cvv = value
 
     def pagar(self, valor):
-        # Simulando processamento de pagamento com cartão de crédito
-        print(f"Pagamento de R${valor:.2f} realizado com cartão de crédito {self.numero_cartao}.")
+        print(f"Pagamento de R${valor:.2f} realizado com cartão de crédito {self._numero_cartao}.")
         return True
 
     def emitir_recibo(self):
-        return f"Recibo: Pagamento com Cartão de Crédito - Número: {self.numero_cartao} - Data: {datetime.now()}"
+        return f"Recibo: Pagamento com Cartão de Crédito - Número: {self._numero_cartao} - Data: {datetime.now()}"
 
 class CartaoDebito(Pagamento):
     def __init__(self, numero_cartao, validade, cvv):
-        self.numero_cartao = numero_cartao
-        self.validade = validade
-        self.cvv = cvv
+        self._numero_cartao = numero_cartao
+        self._validade = validade
+        self._cvv = cvv
+
+    @property
+    def numero_cartao(self):
+        return self._numero_cartao
+
+    @numero_cartao.setter
+    def numero_cartao(self, value):
+        self._numero_cartao = value
+
+    @property
+    def validade(self):
+        return self._validade
+
+    @validade.setter
+    def validade(self, value):
+        self._validade = value
+
+    @property
+    def cvv(self):
+        return self._cvv
+
+    @cvv.setter
+    def cvv(self, value):
+        self._cvv = value
 
     def pagar(self, valor):
-        # Simulando processamento de pagamento com cartão de débito
-        print(f"Pagamento de R${valor:.2f} realizado com cartão de débito {self.numero_cartao}.")
+        print(f"Pagamento de R${valor:.2f} realizado com cartão de débito {self._numero_cartao}.")
         return True
 
     def emitir_recibo(self):
-        return f"Recibo: Pagamento com Cartão de Débito - Número: {self.numero_cartao} - Data: {datetime.now()}"
+        return f"Recibo: Pagamento com Cartão de Débito - Número: {self._numero_cartao} - Data: {datetime.now()}"
 
 class Especie(Pagamento):
     def __init__(self):
         pass
 
     def pagar(self, valor):
-        # Simulando processamento de pagamento em espécie
         print(f"Pagamento de R${valor:.2f} realizado em espécie.")
         return True
 
@@ -310,8 +478,24 @@ class Especie(Pagamento):
 
 class SistemaPagamento:
     def __init__(self, estoque):
-        self.pagamentos = []
-        self.estoque = estoque
+        self._pagamentos = []
+        self._estoque = estoque
+
+    @property
+    def pagamentos(self):
+        return self._pagamentos
+
+    @pagamentos.setter
+    def pagamentos(self, value):
+        self._pagamentos = value
+
+    @property
+    def estoque(self):
+        return self._estoque
+
+    @estoque.setter
+    def estoque(self, value):
+        self._estoque = value
 
     def realizar_pagamento(self, cliente, tipo_pagamento, valor, numero_cartao=None, validade=None, cvv=None):
         tipos_pagamento = {
@@ -332,8 +516,7 @@ class SistemaPagamento:
         
         if pagamento.pagar(valor):
             recibo = pagamento.emitir_recibo()
-            self.pagamentos.append(recibo)
-            print("Pagamento realizado com sucesso.")
+            self._pagamentos.append(recibo)
             self.verificar_pontos_cliente(cliente)
             return recibo
         else:
@@ -342,60 +525,58 @@ class SistemaPagamento:
 
     def verificar_pontos_cliente(self, cliente):
         if cliente.pontos > 500:
-            if self.estoque.produto:
-                joia_ganha = random.choice(self.estoque.produto)
+            if self._estoque.produto:
+                joia_ganha = random.choice(self._estoque.produto)
                 print(f"O cliente {cliente.nome} ganhou um(a) {joia_ganha.nome} por ter mais de 500 pontos!")
-                self.estoque.remover_joia(self.estoque.produto.index(joia_ganha))
+                self._estoque.remover_joia(joia_ganha.idjoia, 1)
             else:
                 print(f"O cliente {cliente.nome} tem mais de 500 pontos, mas não há joias disponíveis no estoque.")
 
 
-class GestaoVendas:
-    def __init__(self):
-        self.vendas = []
-        
-    def adicionar_venda(self, joia, quantidade, preco):
-        venda = {
-            "joia": joia,
-            "quantidade": quantidade,
-            "preco": preco,
-            "data_venda": datetime.now()
-        }
-        self.vendas.append(venda)
-        print(f"Venda registrada: {venda['joia'].nome}, Quantidade: {venda['quantidade']}, Preço: R${venda['preco']:.2f}, Data: {venda['data_venda']}")
+          
+def validar_cpf(cpf):
+    return len(cpf) == 11 and cpf.isdigit()
+
+def validar_contato(contato):
+    return len(contato) == 11 and contato.isdigit()
+
+def validar_float(valor):
+    try:
+        float(valor)
+        return True
+    except ValueError:
+        return False
+
+def validar_inteiro(valor):
+    try:
+        int(valor)
+        return True
+    except ValueError:
+        return False
+
+def validar_nome(nome):
+    return bool(re.match(r"^[A-Za-z\s]+$", nome))
+
+def validar_material(material):
+    return bool(re.match(r"^[A-Za-z\s]+$", material))
+
+def validar_tamanho(tamanho):
+    return bool(re.match(r"^[A-Za-z0-9\s]+$", tamanho))
+
+def validar_estilo(estilo):
+    return bool(re.match(r"^[A-Za-z\s]+$", estilo))
+
+def validar_endereco(endereco):
+    return bool(re.match(r"^[A-Za-z0-9\s,]+$", endereco))
 
 
-    def gerar_relatorio_vendas(self, inicio, fim):
-        relatorio = [venda for venda in self.vendas if inicio <= venda["data_venda"] <= fim]
-        if not relatorio:
-            print("Nenhuma venda registrada no período especificado.")
-        else:
-            for venda in relatorio:
-                print(f"Venda: {venda['joia'].nome}, Quantidade: {venda['quantidade']}, Data: {venda['data_venda']}")
-    def joias_mais_vendidas(self):
-        contagem_joias = Counter()
-        for venda in self.vendas:
-            contagem_joias[venda["joia"].nome] += venda["quantidade"]
-        mais_vendidas = contagem_joias.most_common()
-        if not mais_vendidas:
-            print("Nenhuma joia foi vendida ainda.")
-        else:
-            print("Joias mais vendidas:")
-            for joia, quantidade in mais_vendidas:
-                print(f"{joia}: {quantidade} unidade(s)")
-
-    def calcular_lucro_total(self, inicio, fim):
-        lucro_total = sum(venda["quantidade"] * venda["preco"] for venda in self.vendas if inicio <= venda["data_venda"] <= fim)
-        print(f"Lucro total no período de {inicio} a {fim}: R${lucro_total:.2f}")
-
-       
 def pausa_para_continuar():
     input("\nPressione Enter para continuar...")
-          
+
 def menu():
     estoque = Estoque()
+    sistema_pagamento = SistemaPagamento(estoque)
     gestao_clientes = GestaoClientes()
-    gestao_vendas = GestaoVendas()
     
     while True:
         print("\n----- Sistema Encanto e Glamour -----")
@@ -404,155 +585,449 @@ def menu():
         print("2. Cadastrar Brinco")
         print("3. Cadastrar Pulseira")
         print("4. Listar Joias")
-        print("5. Cadastrar Cliente")
-        print("6. Editar Cliente")
-        print("7. Adicionar Compra ao Cliente")
-        print("8. Consultar Histórico de Compras do Cliente")
-        print("9. Listar Clientes")
-        print("10. Gestão de Vendas")
-        print("11. Sair")
-        opcao = input("Escolha uma opção: ")
+        print("5. Buscar Joia")
+        print("6. Editar Joia")
+        print("7. Remover Joia")
+        print("8. Cadastrar Cliente")
+        print("9. Buscar Cliente")
+        print("10. Editar Cliente")
+        print("11. Realizar Compra")
+        print("12. Mostrar Histórico de Compras do Cliente")
+        print("13. Listar Clientes")
+        print("14. Verificar Pontos dos Clientes")
+        print("15. Sair")
 
+        opcao = input("Escolha uma opção: ")
+        
         if opcao == '1':
             idjoia = input("ID da joia: ")
+            if not validar_inteiro(idjoia):
+                print("ID da joia inválido. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            idjoia = int(idjoia)
+
             nome = input("Nome: ")
+            if not validar_nome(nome):
+                print("Nome inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
             material = input("Material: ")
-            preco = float(input("Preço: "))
-            qtd = int(input("Quantidade: "))
+            if not validar_material(material):
+                print("Material inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
+            preco = input("Preço: ")
+            if not validar_float(preco):
+                print("Preço inválido. Deve ser um número.")
+                pausa_para_continuar()
+                continue
+            preco = float(preco)
+
+            qtd = input("Quantidade: ")
+            if not validar_inteiro(qtd):
+                print("Quantidade inválida. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            qtd = int(qtd)
+
             tamanho = input("Tamanho: ")
+            if not validar_tamanho(tamanho):
+                print("Tamanho inválido. Deve conter apenas letras, números e espaços.")
+                pausa_para_continuar()
+                continue
+
             codigo_validacao = input("Código de validação: ")
             try:
-                colar = Autenticar.criar_joia('colar', idjoia, nome, material, preco, qtd, codigo_validacao, tamanho)
-                estoque.adicionar_joia(colar)
-                print(f"Colar {nome} cadastrado com sucesso!")
+                colar = Colar(idjoia, nome, material, preco, qtd, tamanho, codigo_validacao)
+                autenticado, mensagem = colar.autenticar()
+                if autenticado:
+                    print(f"{mensagem}")
+                    estoque.adicionar_joia(colar)
+                else:
+                    print(f"{mensagem}")
+                    print(f"Erro ao cadastrar colar.")
             except ValueError as e:
                 print(f"Erro ao cadastrar colar: {e}")
             pausa_para_continuar()
 
         elif opcao == '2':
             idjoia = input("ID da joia: ")
+            if not validar_inteiro(idjoia):
+                print("ID da joia inválido. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            idjoia = int(idjoia)
+
             nome = input("Nome: ")
+            if not validar_nome(nome):
+                print("Nome inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
             material = input("Material: ")
-            preco = float(input("Preço: "))
-            qtd = int(input("Quantidade: "))
+            if not validar_material(material):
+                print("Material inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
+            preco = input("Preço: ")
+            if not validar_float(preco):
+                print("Preço inválido. Deve ser um número.")
+                pausa_para_continuar()
+                continue
+            preco = float(preco)
+
+            qtd = input("Quantidade: ")
+            if not validar_inteiro(qtd):
+                print("Quantidade inválida. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            qtd = int(qtd)
+
             estilo = input("Estilo: ")
+            if not validar_estilo(estilo):
+                print("Estilo inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
             codigo_validacao = input("Código de validação: ")
             try:
-                brinco = Autenticar.criar_joia('brinco', idjoia, nome, material, preco, qtd, codigo_validacao, estilo)
-                estoque.adicionar_joia(brinco)
-                print(f"Brinco {nome} cadastrado com sucesso!")
+                brinco = Brinco(idjoia, nome, material, preco, qtd, estilo, codigo_validacao)
+                autenticado, mensagem = brinco.autenticar()
+                if autenticado:
+                    print(f"{mensagem}")
+                    estoque.adicionar_joia(brinco)
+                else:
+                    print(f"{mensagem}")
+                    print(f"Erro ao cadastrar brinco.")
             except ValueError as e:
                 print(f"Erro ao cadastrar brinco: {e}")
             pausa_para_continuar()
 
         elif opcao == '3':
             idjoia = input("ID da joia: ")
+            if not validar_inteiro(idjoia):
+                print("ID da joia inválido. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            idjoia = int(idjoia)
+
             nome = input("Nome: ")
+            if not validar_nome(nome):
+                print("Nome inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
             material = input("Material: ")
-            preco = float(input("Preço: "))
-            qtd = int(input("Quantidade: "))
+            if not validar_material(material):
+                print("Material inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
+            preco = input("Preço: ")
+            if not validar_float(preco):
+                print("Preço inválido. Deve ser um número.")
+                pausa_para_continuar()
+                continue
+            preco = float(preco)
+
+            qtd = input("Quantidade: ")
+            if not validar_inteiro(qtd):
+                print("Quantidade inválida. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            qtd = int(qtd)
+
             codigo_validacao = input("Código de validação: ")
             try:
-                pulseira = Autenticar.criar_joia('pulseira', idjoia, nome, material, preco, qtd, codigo_validacao, None)
-                estoque.adicionar_joia(pulseira)
-                print(f"Pulseira {nome} cadastrada com sucesso!")
+                pulseira = Pulseira(idjoia, nome, material, preco, qtd, codigo_validacao)
+                autenticado, mensagem = pulseira.autenticar()
+                if autenticado:
+                    print(f"{mensagem}")
+                    estoque.adicionar_joia(pulseira)
+                else:
+                    print(f"{mensagem}")
+                    print(f"Erro ao cadastrar pulseira.")
             except ValueError as e:
                 print(f"Erro ao cadastrar pulseira: {e}")
             pausa_para_continuar()
-
 
         elif opcao == '4':
             estoque.listar_joias()
             pausa_para_continuar()
 
         elif opcao == '5':
-            nome = input("Nome do cliente: ")
-            cpf = input("CPF do cliente: ")
-            endereco = input("Endereço do cliente: ")
-            contato = input("Contato do cliente: ")
-            gestao_clientes.cadastrar_cliente(nome, cpf, endereco, contato)
+            nome = input("Nome da joia: ")
+            if not validar_nome(nome):
+                print("Nome inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+            
+            idjoia = input("ID da joia: ")
+            if not validar_inteiro(idjoia):
+                print("ID da joia inválido. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            idjoia = int(idjoia)
+            
+            indice = input("Índice da joia: ")
+            if not validar_inteiro(indice):
+                print("Índice inválido. Deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            indice = int(indice)
+            
+            
+            joia = estoque.buscar_joia(indice, nome, idjoia)
+            if joia:
+                print(f"Joia encontrada: {joia.nome}, ID: {joia.idjoia}")
+            else:
+                print("Joia não encontrada.")
             pausa_para_continuar()
 
         elif opcao == '6':
-            cpf = input("CPF do cliente a ser editado: ")
-            nome = input("Novo nome (ou pressione Enter para manter o atual): ") or None
-            endereco = input("Novo endereço (ou pressione Enter para manter o atual): ") or None
-            contato = input("Novo contato (ou pressione Enter para manter o atual): ") or None
-            pontos = input("Novos pontos (ou pressione Enter para manter o atual): ")
-            pontos = int(pontos) if pontos else None
-            gestao_clientes.editar_cliente(cpf, nome, endereco, contato, pontos)
+            try:
+                indice = input("Índice da joia a ser editada: ")
+                if not validar_inteiro(indice):
+                    print("Índice inválido. Deve ser um número inteiro.")
+                    pausa_para_continuar()
+                    continue
+                indice = int(indice)
+
+                
+                nome = input("Novo nome (ou pressione Enter para manter o atual): ") or None
+                if nome and not validar_nome(nome):
+                    print("Nome inválido. Deve conter apenas letras e espaços.")
+                    pausa_para_continuar()
+                    continue
+
+                idjoia = input("ID da joia (ou pressione Enter para manter o atual): ") or None
+                if idjoia and not validar_inteiro(idjoia):
+                    print("ID da joia inválido. Deve ser um número inteiro.")
+                    pausa_para_continuar()
+                    continue
+                idjoia = int(idjoia) if idjoia else None
+
+                material = input("Novo material (ou pressione Enter para manter o atual): ") or None
+                if material and not validar_material(material):
+                    print("Material inválido. Deve conter apenas letras e espaços.")
+                    pausa_para_continuar()
+                    continue
+
+                preco = input("Novo preço (ou pressione Enter para manter o atual): ") or None
+                if preco and not validar_float(preco):
+                    print("Preço inválido. Deve ser um número.")
+                    pausa_para_continuar()
+                    continue
+                preco = float(preco) if preco else None
+
+                quantidade = input("Nova quantidade (ou pressione Enter para manter o atual): ") or None
+                if quantidade and not validar_inteiro(quantidade):
+                    print("Quantidade inválida. Deve ser um número inteiro.")
+                    pausa_para_continuar()
+                    continue
+                quantidade = int(quantidade) if quantidade else None
+
+                tamanho = input("Novo tamanho (ou pressione Enter para manter o atual): ") or None
+                if tamanho and not validar_tamanho(tamanho):
+                    print("Tamanho inválido. Deve conter apenas letras, números e espaços.")
+                    pausa_para_continuar()
+                    continue
+
+                estilo = input("Novo estilo (ou pressione Enter para manter o atual): ") or None
+                if estilo and not validar_estilo(estilo):
+                    print("Estilo inválido. Deve conter apenas letras e espaços.")
+                    pausa_para_continuar()
+                    continue
+
+                codigo_validacao = input("Novo código de validação (ou pressione Enter para manter o atual): ") or None
+
+                
+                campos_editados = any([nome, idjoia, material, preco, quantidade, tamanho, estilo, codigo_validacao])
+                if not campos_editados:
+                    print("Nenhuma alteração foi feita.")
+                    pausa_para_continuar()
+                    continue
+
+                
+                estoque.editar_joia(indice, nome, idjoia, material, preco, quantidade, tamanho, estilo, codigo_validacao)
+                print("Joia editada com sucesso.")
+            except ValueError as e:
+                print(f"Erro ao editar joia: {e}")
             pausa_para_continuar()
+
 
         elif opcao == '7':
-            cpf = input("CPF do cliente: ")
-            cliente = gestao_clientes.buscar_cliente(cpf)
-            if cliente:
-                idjoia = input("ID da joia: ")
-                quantidade = int(input("Quantidade: "))
-                joia = next((j for j in estoque.produto if j.idjoia == idjoia), None)
-                if joia:
-                    gestao_clientes.adicionar_compra_cliente(cpf, joia, quantidade, estoque, gestao_vendas)
-                    gestao_vendas.vendas.append({"joia": joia, "quantidade": quantidade, "data_venda": datetime.now()})
-                else:
-                    print("Joia não encontrada no estoque.")
-            pausa_para_continuar()
+            indice = input("ID da joia a ser removida: ")
+            if not validar_inteiro(indice):
+                print("ID deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            indice = int(indice)
 
+            quantidade = input("Quantidade a ser removida: ")
+            if not validar_inteiro(quantidade):
+                print("Quantidade deve ser um número inteiro.")
+                pausa_para_continuar()
+                continue
+            quantidade = int(quantidade)
+
+            estoque.remover_joia(indice, quantidade)
+            pausa_para_continuar()
+            
         elif opcao == '8':
-            cpf = input("CPF do cliente: ")
-            gestao_clientes.historico_compras_cliente(cpf)
+            nome = input("Nome do cliente: ")
+            if not validar_nome(nome):
+                print("Nome inválido. Deve conter apenas letras e espaços.")
+                pausa_para_continuar()
+                continue
+
+            endereco = input("Endereço: ")
+            if not validar_endereco(endereco):
+                print("Endereço inválido. Deve conter apenas letras, números e espaços.")
+                pausa_para_continuar()
+                continue
+
+            contato = input("Contato (11 dígitos): ")
+            if not validar_contato(contato):
+                print("Contato inválido. Deve ter 11 dígitos.")
+                pausa_para_continuar()
+                continue
+
+            cpf = input("CPF do cliente (11 dígitos): ")
+            if not validar_cpf(cpf):
+                print("CPF inválido. Deve ter 11 dígitos.")
+                pausa_para_continuar()
+                continue
+
+            gestao_clientes.cadastrar_cliente(cpf, nome, endereco, contato)
             pausa_para_continuar()
 
         elif opcao == '9':
-            gestao_clientes.listar_clientes()
+            cpf = input("CPF do cliente: ")
+            if not validar_cpf(cpf):
+                print("CPF inválido. Deve conter apenas números.")
+                pausa_para_continuar()
+                continue
+            
+            cliente = gestao_clientes.buscar_cliente(cpf)
+            if cliente:
+                print(f"Cliente encontrado: {cliente.nome}, CPF: {cliente.cpf}")
+            else:
+                print("Cliente não encontrado.")
             pausa_para_continuar()
 
-        elif opcao == '10':  # Novo menu de Gestão de Vendas
-            while True:
-                print("\n--- Gestão de Vendas ---")
-                print("1. Ver Relatório de Vendas")
-                print("2. Calcular Lucro em Intervalo de Tempo")
-                print("3. Ver Lucro Total")
-                print("4. Voltar ao Menu Principal")
-                opcao_vendas = input("Escolha uma opção: ")
-
-                if opcao_vendas == '1':
-                    try:
-                        inicio = datetime.strptime(input("Data de início (AAAA-MM-DD): "), "%Y-%m-%d")
-                        fim = datetime.strptime(input("Data de fim (AAAA-MM-DD): "), "%Y-%m-%d") + timedelta(days=1)
-                        gestao_vendas.gerar_relatorio_vendas(inicio, fim)
-                    except ValueError:
-                        print("Formato de data inválido.")
+        elif opcao == '10':
+            try:
+                cpf = input("CPF do cliente (11 dígitos): ")
+                if not validar_cpf(cpf):
+                    print("CPF inválido. Deve ter 11 dígitos.")
                     pausa_para_continuar()
+                    continue
 
-                elif opcao_vendas == '2':
-                    try:
-                        inicio = datetime.strptime(input("Data de início (AAAA-MM-DD): "), "%Y-%m-%d")
-                        fim = datetime.strptime(input("Data de fim (AAAA-MM-DD): "), "%Y-%m-%d") + timedelta(days=1)
-                        gestao_vendas.calcular_lucro_total(inicio, fim)
-                    except ValueError:
-                        print("Formato de data inválido.")
+                nome = input("Novo nome (ou pressione Enter para manter o atual): ")
+                if nome and not validar_nome(nome):
+                    print("Nome inválido. Deve conter apenas letras e espaços.")
                     pausa_para_continuar()
+                    continue
 
-                elif opcao_vendas == '3':
-                    try:
-                        inicio = datetime.strptime(input("Data de início (AAAA-MM-DD): "), "%Y-%m-%d")
-                        fim = datetime.strptime(input("Data de fim (AAAA-MM-DD): "), "%Y-%m-%d") + timedelta(days=1)
-                        gestao_vendas.calcular_lucro_total(inicio, fim)
-                    except ValueError:
-                        print("Formato de data inválido.")
+                endereco = input("Novo endereço (ou pressione Enter para manter o atual): ")
+                if endereco and not validar_endereco(endereco):
+                    print("Endereço inválido. Deve conter apenas letras, números e espaços.")
                     pausa_para_continuar()
+                    continue
 
-                elif opcao_vendas == '4':
-                    break
-
-                else:
-                    print("Opção inválida. Tente novamente.")
+                contato = input("Novo contato (ou pressione Enter para manter o atual): ")
+                if contato and not validar_contato(contato):
+                    print("Contato inválido. Deve ter 11 dígitos.")
                     pausa_para_continuar()
+                    continue
+
+                pontos = input("Pontos (ou pressione Enter para manter o atual): ")
+                pontos = int(pontos) if pontos and validar_inteiro(pontos) else None
+
+                
+                campos_editados = any([nome, endereco, contato, pontos is not None])
+                if not campos_editados:
+                    print("Nenhuma alteração foi feita.")
+                    pausa_para_continuar()
+                    continue
+
+                gestao_clientes.editar_cliente(cpf, nome, endereco, contato, pontos)
+                print("Cliente editado com sucesso.")
+            except ValueError as e:
+                print(f"Erro ao editar cliente: {e}")
+            pausa_para_continuar()
 
         elif opcao == '11':
+            cpf = input("CPF do cliente (11 dígitos): ")
+            if not validar_cpf(cpf):
+                print("CPF inválido. Deve ter 11 dígitos.")
+                pausa_para_continuar()
+                continue
+
+            cliente = gestao_clientes.buscar_cliente(cpf)
+            if cliente:
+                idjoia = input("ID da joia: ")
+                if not validar_inteiro(idjoia):
+                    print("ID da joia inválido. Deve ser um número inteiro.")
+                    pausa_para_continuar()
+                    continue
+                idjoia = int(idjoia)
+
+                quantidade = input("Quantidade: ")
+                if not validar_inteiro(quantidade):
+                    print("Quantidade inválida. Deve ser um número inteiro.")
+                    pausa_para_continuar()
+                    continue
+                quantidade = int(quantidade)
+
+                joia = next((j for j in estoque.produto if j.idjoia == idjoia), None)
+                if joia:
+                    gestao_clientes.adicionar_compra_cliente(cpf, joia, quantidade, estoque)
+                else:
+                    print("Joia não encontrada no estoque.")
+            else:
+                print("Cliente não encontrado.")
+            pausa_para_continuar()
+
+
+        elif opcao == '12':
+            cpf = input("CPF do cliente (11 dígitos): ")
+            if not validar_cpf(cpf):
+                print("CPF inválido. Deve ter 11 dígitos.")
+                pausa_para_continuar()
+                continue
+            gestao_clientes.historico_compras_cliente(cpf)
+            pausa_para_continuar()
+
+        elif opcao == '13':
+            gestao_clientes.listar_clientes()
+            pausa_para_continuar()
+            
+        elif opcao == '14':
+            cpf = input("CPF do cliente (11 dígitos): ")
+            if not validar_cpf(cpf):
+                print("CPF inválido. Deve ter 11 dígitos.")
+                pausa_para_continuar()
+                continue
+
+            cliente = gestao_clientes.buscar_cliente(cpf)
+            if cliente:
+                sistema_pagamento.verificar_pontos_cliente(cliente)
+            else:
+                print("Cliente não encontrado.")
+            pausa_para_continuar()
+            
+        elif opcao == '15':
+            print("Saindo da aplicação...")
             break
 
         else:
             print("Opção inválida. Tente novamente.")
+            pausa_para_continuar()
 
 menu()
