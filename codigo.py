@@ -532,8 +532,7 @@ class SistemaPagamento:
             else:
                 print(f"O cliente {cliente.nome} tem mais de 500 pontos, mas não há joias disponíveis no estoque.")
 
-
-          
+            
 def validar_cpf(cpf):
     return len(cpf) == 11 and cpf.isdigit()
 
@@ -903,7 +902,7 @@ def menu():
                 pausa_para_continuar()
                 continue
 
-            gestao_clientes.cadastrar_cliente(cpf, nome, endereco, contato)
+            gestao_clientes.cadastrar_cliente(nome, cpf, endereco, contato)
             pausa_para_continuar()
 
         elif opcao == '9':
@@ -914,10 +913,7 @@ def menu():
                 continue
             
             cliente = gestao_clientes.buscar_cliente(cpf)
-            if cliente:
-                print(f"Cliente encontrado: {cliente.nome}, CPF: {cliente.cpf}")
-            else:
-                print("Cliente não encontrado.")
+            
             pausa_para_continuar()
 
         elif opcao == '10':
