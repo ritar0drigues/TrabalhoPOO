@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from collections import Counter
 
-from abc import ABC, abstractmethod
+import abc
 
 class Joia:
     def __init__(self, idjoia, nome, material, preco, qtd, codigo_validacao):
@@ -63,12 +63,11 @@ class Joia:
     def codigo_validacao(self, value):
         self._codigo_validacao = value
 
-class Autenticar(ABC):
-    @abstractmethod
+class Autenticar(abc.ABC):
     def autenticar(self):
         pass
 
-class Colar(Joia, Autenticar):
+class Colar(Joia):
     def __init__(self, idjoia, nome, material, preco, qtd, tamanho, codigo_validacao):
         super().__init__(idjoia, nome, material, preco, qtd, codigo_validacao)
         self._tamanho = tamanho
@@ -87,7 +86,7 @@ class Colar(Joia, Autenticar):
             return True, f'A peça {self._nome} é de material {self._material} legítimo.'
         return False, f'A peça {self._nome} não é de material {self._material} legítimo.'
 
-class Brinco(Joia, Autenticar):
+class Brinco(Joia):
     def __init__(self, idjoia, nome, material, preco, qtd, estilo, codigo_validacao):
         super().__init__(idjoia, nome, material, preco, qtd, codigo_validacao)
         self._estilo = estilo
@@ -571,6 +570,10 @@ def validar_endereco(endereco):
 
 def pausa_para_continuar():
     input("\nPressione Enter para continuar...")
+
+Autenticar.register(Colar)
+Autenticar.register(Brinco)
+Autenticar.register(Pulseira)
 
 def menu():
     estoque = Estoque()
